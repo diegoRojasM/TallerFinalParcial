@@ -1,0 +1,39 @@
+<h1>Eventos</h1>
+
+<button [routerLink]='["/confirmar-evento"]'  class="btn btn-primary" >Crear evento</button>
+
+<p *ngIf="!(eventos && eventos.length)" >
+    No existen eventos para mostrar
+</p>
+<br>
+<br>
+<br>
+<h2>Eventos Individuales Disponibles</h2>
+<br>
+
+<div class="table" *ngIf="eventos && eventos.length">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Ubicación</th>
+            <th>Información de Contacto</th>
+            <th>Fecha de Inicio</th>
+            <th>Fecha de Fin</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let evento of eventos">
+            <td>{{ evento.nombre }}</td>
+            <td>{{ evento.ubicacion }}</td>
+            <td>{{ evento.informacionContacto }}</td>
+            <td>{{ evento.fechaInicio | date : 'dd-MM-yyyy' }}</td>
+            <td>{{ evento.fechaFin | date : 'dd-MM-yyyy' }}</td>
+            <td>
+                <button class="btn btn-primary" [routerLink]="['/inscribir-participante/', evento.id]">Inscribirse</button>
+                <button class="btn btn-secundary" [routerLink]="['/eventos-detalle/', evento.id]">Ver Detalles</button>
+                <!-- <button class="btn btn-danger" (click)="delete(evento)">Borrar</button> -->
+            </td>
+        </tr>
+    </tbody>
+</div>
