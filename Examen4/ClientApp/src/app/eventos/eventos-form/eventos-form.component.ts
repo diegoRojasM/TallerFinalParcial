@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IEvento } from '../Evento';
 import { EventosService } from '../eventos.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ParticipantesService } from 'src/app/participantes/participantes.service';
 
 @Component({
   selector: 'app-eventos-form',
@@ -12,6 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   providers: [DatePipe]
 })
 export class EventosFormComponent implements OnInit {
+
   formGroup!: FormGroup;
   //modoVerDetalle: boolean = false; // Set this based on your logic
   eventoId! : number;
@@ -19,12 +21,15 @@ export class EventosFormComponent implements OnInit {
   modoAgregar: boolean = false;
   modoVerDetalle: boolean = false;
   modoInscribirParticipane: boolean = false;
+  participantesABorrar: number[] = [];
+
 
   constructor(private fb: FormBuilder,
               private eventoService: EventosService,
               private router: Router,
               private activatedRoute: ActivatedRoute,
-              private datePipe: DatePipe,) {}
+              private datePipe: DatePipe,
+              private participantesService: ParticipantesService) {}
 
   ngOnInit() {
     this.formGroup = this.fb.group({
@@ -34,7 +39,8 @@ export class EventosFormComponent implements OnInit {
       informacionContacto: ['', Validators.required],
       fechaInicio: ['', Validators.required],
       fechaFin: ['', Validators.required],
-      estado: { value: 'Activo', disabled: this.modoVerDetalle }
+      estado: { value: 'Activo', disabled: this.modoVerDetalle },
+      participantes: this.fb.array([])
     });
 
     
@@ -67,6 +73,39 @@ export class EventosFormComponent implements OnInit {
     }
   }
 
+
+  get participantes(): FormArray {
+    return this.formGroup.get('participantes') as FormArray;
+  }
+
+  agregarParticipante() {
+    this.participantes.push(this.construirParticipante());
+  }
+
+  construirParticipante(): FormGroup {
+    return this.fb.group({
+      id: 0,
+      nombre: '',
+      direccion: '',
+      fechaNacimiento: '',
+      correo: '',
+      numeroTelefono: '',
+      organizacion: '',
+      profesion: '',
+      cargo: '',
+      eventoId: this.eventoId != null ? this.eventoId : 0
+    });
+  }
+
+  removerParticipante(index : number) {
+    let participanteRemover = this.participantes.at(index) as FormGroup;
+    if (participanteRemover.controls['id'].value != '0') {
+      this.participantesABorrar.push(<number>participanteRemover.controls['id'].value);
+    }
+    this.participantes.removeAt(index);
+  }
+
+
   cargarFormulario(evento : IEvento){
     const format = 'yyyy-MM-dd';
 
@@ -78,22 +117,37 @@ export class EventosFormComponent implements OnInit {
       fechaInicio: this.datePipe.transform(evento.fechaInicio, format),
       fechaFin: this.datePipe.transform(evento.fechaFin, format),
       estado: evento.estado
-    })
+    });
+
+    const participantesFormArray = this.fb.array(
+      evento.participantes.map(participante => this.fb.group(participante))
+    );
+    this.formGroup.setControl('participantes', participantesFormArray);
+    // let participantes = this.formGroup.controls['participantes'] as FormArray;
+    // evento.participantes.forEach(participante => {
+    //   let participanteFG = this.construirParticipante();
+    //   participanteFG.patchValue(participante);
+    //   participantes.push(participanteFG);
+    // })
+
   }
 
+
   save() {
-    if (this.modoVerDetalle ) return;//a
+    if (this.modoVerDetalle && this.modoAgregar ) return;//a
 
     let evento: IEvento = Object.assign({}, this.formGroup.value);
     console.table(evento);
 
-    //this.if(this.modoVerDetalle)
+
+    
+
     if(this.modoInscribirParticipane){
       //EDITAR EL REGISTRO
       evento.id = this.eventoId
       //console.log(this.eventoId);
       this.eventoService.updateEvento(evento)
-        .subscribe(evento => this.onSaveSuccess(),
+        .subscribe(evento => this.borrarParticipante(),
         error => console.error(error)
       )
     }else{ 
@@ -105,23 +159,16 @@ export class EventosFormComponent implements OnInit {
 
   }
 
-  //   if (this.modoEdicion) {
-  //     persona.id = this.personaId;
+  borrarParticipante(){
+    if(this.participantesABorrar.length===0){
+      this.onSaveSuccess();
+      return;
+    }
 
-  //     this.personaService.updatePersona(persona)
-  //       .subscribe(() => this.borrarDirecciones(),
-  //                  error => console.error(error));
-  //   } else {
-  //     this.personaService.createPersona(persona)
-  //       .subscribe(() => this.onSaveSuccess(),
-  //                  error => console.error(error));
-  //   }
-  // }
-
-
-
-
-
+    this.participantesService.deleteParticipantes(this.participantesABorrar)
+      .subscribe(()=> this.onSaveSuccess(),
+        error => console.error(error))
+  }
 
 
 

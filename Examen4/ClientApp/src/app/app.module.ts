@@ -75,6 +75,7 @@ import { EventosComponent } from './eventos/eventos.component';
 import { EventosService } from './eventos/eventos.service';
 import { ConfirmarEventoComponent } from './eventos/confirmar-evento/confirmar-evento.component';
 import { EventosFormComponent } from './eventos/eventos-form/eventos-form.component';
+import { ParticipantesService } from './participantes/participantes.service';
 
 
 @NgModule({
@@ -130,6 +131,7 @@ import { EventosFormComponent } from './eventos/eventos-form/eventos-form.compon
     AuthGuardService,
     AccountService,
 
+    ParticipantesService,
     EventosService,
     {
       provide: HTTP_INTERCEPTORS,

@@ -11,7 +11,7 @@ const PROXY_CONFIG = [
       "/direcciones",
       "/account",
       "/eventos",
-
+      "/participantes",
       
 
    ],

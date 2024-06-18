@@ -10,7 +10,6 @@ using Examen3.ServiceApp;
 namespace Examen3.Controllers
 {
     [ApiController]
-
     [Route("eventos")]
     public class EventosController : ControllerBase
     {
@@ -30,9 +29,20 @@ namespace Examen3.Controllers
 
         // GET: api/Eventos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Evento>> GetEvento(int id)
+        public async Task<ActionResult<Evento>> GetEvento(int id, bool incluirParticipantes = false)
         {
-            var evento = await _context.Eventos.FindAsync(id);
+            Evento evento;
+
+            if (incluirParticipantes)
+            {
+                evento = await _context.Eventos
+                                       .Include(x => x.Participantes)
+                                       .FirstOrDefaultAsync(x => x.Id == id);
+            }
+            else
+            {
+                evento = await _context.Eventos.FindAsync(id);
+            }
 
             if (evento == null)
             {

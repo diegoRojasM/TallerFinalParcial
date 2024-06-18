@@ -1,4 +1,5 @@
-//import { IDireccion } from "../direcciones/direccion";
+
+import { IParticipante } from "./eventos-form/Participante";
 
 export interface IEvento{
     id: number;
@@ -9,6 +10,6 @@ export interface IEvento{
     fechaInicio: Date;
     fechaFin: Date;
     estado: string;
-    //direcciones: IDireccion[];
+    participantes: IParticipante[];
 }
 

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { IEvento } from './Evento';
 import { Observable } from 'rxjs';
@@ -17,7 +17,8 @@ export class EventosService {
   }
 
   getEvento(eventoId: string): Observable<IEvento>{
-    return this.http.get<IEvento>(this.apiURL + '/' + eventoId)
+    let params = new HttpParams().set('incluirParticipantes',"true")
+    return this.http.get<IEvento>(this.apiURL + '/' + eventoId, { params: params})
   }
 
   createEvento(evento: IEvento):Observable<IEvento>{

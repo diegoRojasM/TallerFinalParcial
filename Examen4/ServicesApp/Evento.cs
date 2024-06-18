@@ -10,6 +10,6 @@ namespace Examen3.ServiceApp
         public DateTime FechaInicio { get; set; }
         public DateTime FechaFin { get; set; }
         public string Estado { get; set; }
-        //public List<Participante> Participantes { get; set;}
+        public List<Participante> Participantes { get; set;}
     }
 }
