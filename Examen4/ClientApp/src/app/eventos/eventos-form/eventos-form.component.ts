@@ -15,14 +15,12 @@ import { ParticipantesService } from 'src/app/participantes/participantes.servic
 export class EventosFormComponent implements OnInit {
 
   formGroup!: FormGroup;
-  //modoVerDetalle: boolean = false; // Set this based on your logic
-  eventoId! : number;
+  eventoId!: number;
 
   modoAgregar: boolean = false;
   modoVerDetalle: boolean = false;
   modoInscribirParticipane: boolean = false;
   participantesABorrar: number[] = [];
-
 
   constructor(private fb: FormBuilder,
               private eventoService: EventosService,
@@ -43,15 +41,13 @@ export class EventosFormComponent implements OnInit {
       participantes: this.fb.array([])
     });
 
-    
     this.activatedRoute.params.subscribe(params => {
       if (params['id'] === undefined) {
-        this.modoAgregar = true;// a
+        this.modoAgregar = true;
         return;
       }
-      //this.modoVerDetalle = true;
 
-      this.eventoId = params['id'];
+      this.eventoId = +params['id']; // Ensure eventoId is a number
 
       const urlSegments = this.activatedRoute.snapshot.url.map(segment => segment.path);
       if (urlSegments.includes('inscribir-participante')) {
@@ -60,53 +56,49 @@ export class EventosFormComponent implements OnInit {
         this.modoVerDetalle = true;
       }
 
-//
-      this.eventoId = params['id'];
       this.eventoService.getEvento(this.eventoId.toString())
         .subscribe(evento => this.cargarFormulario(evento),
                    error => console.error(error));
     });
 
-
-    if (this.modoVerDetalle  || this.modoInscribirParticipane) { //a
+    if (this.modoVerDetalle || this.modoInscribirParticipane) {
       this.formGroup.disable();
     }
   }
-
 
   get participantes(): FormArray {
     return this.formGroup.get('participantes') as FormArray;
   }
 
   agregarParticipante() {
-    this.participantes.push(this.construirParticipante());
+    const participante = this.construirParticipante();
+    this.participantes.push(participante);
   }
 
   construirParticipante(): FormGroup {
     return this.fb.group({
-      id: 0,
-      nombre: '',
-      direccion: '',
-      fechaNacimiento: '',
-      correo: '',
-      numeroTelefono: '',
-      organizacion: '',
-      profesion: '',
-      cargo: '',
-      eventoId: this.eventoId != null ? this.eventoId : 0
+      id: 0, 
+      nombre: [''],
+      direccion: [''],
+      fechaNacimiento: [''],
+      correo: [''],
+      numeroTelefono: [''],
+      organizacion: [''],
+      profesion: [''],
+      cargo: [''],
+      eventoId: this.eventoId 
     });
   }
 
-  removerParticipante(index : number) {
+  removerParticipante(index: number) {
     let participanteRemover = this.participantes.at(index) as FormGroup;
     if (participanteRemover.controls['id'].value != '0') {
-      this.participantesABorrar.push(<number>participanteRemover.controls['id'].value);
+      this.participantesABorrar.push(+participanteRemover.controls['id'].value);
     }
     this.participantes.removeAt(index);
   }
 
-
-  cargarFormulario(evento : IEvento){
+  cargarFormulario(evento: IEvento) {
     const format = 'yyyy-MM-dd';
 
     this.formGroup.patchValue({
@@ -120,57 +112,65 @@ export class EventosFormComponent implements OnInit {
     });
 
     const participantesFormArray = this.fb.array(
-      evento.participantes.map(participante => this.fb.group(participante))
+      evento.participantes.map(participante => this.fb.group({
+        id: participante.id,
+        nombre: participante.nombre,
+        direccion: participante.direccion,
+        fechaNacimiento: participante.fechaNacimiento,
+        correo: participante.correo,
+        numeroTelefono: participante.numeroTelefono,
+        organizacion: participante.organizacion,
+        profesion: participante.profesion,
+        cargo: participante.cargo,
+        eventoId: participante.eventoId
+      }))
     );
     this.formGroup.setControl('participantes', participantesFormArray);
-    // let participantes = this.formGroup.controls['participantes'] as FormArray;
-    // evento.participantes.forEach(participante => {
-    //   let participanteFG = this.construirParticipante();
-    //   participanteFG.patchValue(participante);
-    //   participantes.push(participanteFG);
-    // })
-
   }
-
-
   save() {
-    if (this.modoVerDetalle && this.modoAgregar ) return;//a
-
-    let evento: IEvento = Object.assign({}, this.formGroup.value);
-    console.table(evento);
-
-
-    
-
-    if(this.modoInscribirParticipane){
-      //EDITAR EL REGISTRO
-      evento.id = this.eventoId
-      //console.log(this.eventoId);
+    if (this.modoVerDetalle || this.modoAgregar) return;
+  
+    let evento: IEvento = {
+      ...this.formGroup.value,
+      id: this.eventoId,
+      participantes: this.participantes.controls.map(control => {
+        const participante = control.value;
+        return {
+          ...participante,
+          id: +participante.id, 
+          eventoId: +participante.eventoId 
+        };
+      })
+    };
+  
+    console.log('Evento to save:', JSON.stringify(evento, null, 2));
+  
+    if (this.modoInscribirParticipane) {
       this.eventoService.updateEvento(evento)
-        .subscribe(evento => this.borrarParticipante(),
-        error => console.error(error)
-      )
-    }else{ 
-      //AGREGAR REGISTRO
-    this.eventoService.createEvento(evento)
-      .subscribe(evento => this.onSaveSuccess(),
-                 error => console.error(error));
+        .subscribe(
+          () => this.borrarParticipante(),
+          error => console.error(error)
+        );
+    } else {
+      this.eventoService.createEvento(evento)
+        .subscribe(
+          () => this.onSaveSuccess(),
+          error => console.error(error)
+        );
     }
-
   }
+  
 
-  borrarParticipante(){
-    if(this.participantesABorrar.length===0){
+  borrarParticipante() {
+    if (this.participantesABorrar.length === 0) {
       this.onSaveSuccess();
       return;
     }
 
     this.participantesService.deleteParticipantes(this.participantesABorrar)
-      .subscribe(()=> this.onSaveSuccess(),
-        error => console.error(error))
+      .subscribe(() => this.onSaveSuccess(),
+                 error => console.error(error));
   }
-
-
 
   onSaveSuccess() {
     this.router.navigate(['/eventos']);

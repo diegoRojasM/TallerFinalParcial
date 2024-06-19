@@ -11,22 +11,20 @@ export class EventosService {
 
   constructor(private http: HttpClient, @Inject('BASE_URL') private baseUrl: string ) { }
 
-  // Método para obtener eventos
   getEventos(): Observable<IEvento[]> {
     return this.http.get<IEvento[]>(this.apiURL);
   }
 
   getEvento(eventoId: string): Observable<IEvento>{
-    let params = new HttpParams().set('incluirParticipantes',"true")
-    return this.http.get<IEvento>(this.apiURL + '/' + eventoId, { params: params})
+    let params = new HttpParams().set('incluirParticipantes',"true");
+    return this.http.get<IEvento>(this.apiURL + '/' + eventoId, { params: params });
   }
 
-  createEvento(evento: IEvento):Observable<IEvento>{
-    return this.http.post<IEvento>(this.apiURL, evento)
-  }
-  // solo para actualizar participantes
-  updateEvento(evento:IEvento):Observable<IEvento>{
-    return this.http.put<IEvento>(this.apiURL+"/"+evento.id.toString(),evento);
+  createEvento(evento: IEvento): Observable<IEvento> {
+    return this.http.post<IEvento>(this.apiURL, evento);
   }
 
+  updateEvento(evento: IEvento): Observable<IEvento> {
+    return this.http.put<IEvento>(this.apiURL + "/" + evento.id.toString(), evento);
+  }
 }
